@@ -1,0 +1,16 @@
+,SB-028
+Weighted Accuracy,0.5705499438832773
+Sensitivity/Recall,0.35185185185185186
+Specificity,0.7892480359147026
+Precision_class0,0.25
+Precision_class1,0.8486557302346776
+Precision_avg,0.5493278651173388
+F1_class0,0.2920634920634921
+F1_class1,0.8164362881539841
+F1_avg,0.5542498901087382
+auc_roc_score,0.5705499438832773
+False_Discovery_Rate,0.6481481481481481
+False_Negative_Rate,0.1513442697653224
+False_Omission_Rate,0.2107519640852974
+False_Positive_Rate,0.75
+Jaccard,0.1875
