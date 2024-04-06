@@ -18,5 +18,7 @@
 </div>
 
 Transfer Learning has 2 parts normally - 
-1. Learning - Population Models - Here we create generalized models for all patients - [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)]([https://colab.research.google.com/github/SartajBhuvaji/SDGnE/blob/main/notebooks/SDGnE_Autoencoder_Notebook.ipynb](https://colab.research.google.com/github/baew-seattleu/TL/blob/main/Models/classification/Step%201%20-%20TL_Model/TL_Population_Model.ipynb))
-2. Transfer Learning - Individual Models - Here we use existing models to learn about a specific patient at a time [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)]([https://colab.research.google.com/github/SartajBhuvaji/SDGnE/blob/main/notebooks/SDGnE_Autoencoder_Notebook.ipynb](https://colab.research.google.com/github/baew-seattleu/TL/blob/main/Models/classification/Step%201%20-%20TL_Model/TL_Population_Model.ipynb))
+1. Learning - Population Models - Here we create generalized models for all patients     <br />
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/baew-seattleu/TL/blob/main/Models/classification/Step%201%20-%20TL_Model/TL_Population_Model.ipynb)
+2. Transfer Learning - Individual Models - Here we use existing models to learn about a specific patient at a time     <br />
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/baew-seattleu/TL/blob/main/Models/classification/Step%201%20-%20TL_Model/TL_Individual_Model.ipynb)
