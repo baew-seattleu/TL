@@ -61,12 +61,15 @@ To get started with the code, follow these steps:
 
 Transfer Learning has 3 parts - 
 1. Training - Population Models - Here we create generalized models for all patients     <br />
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/baew-seattleu/TL/blob/main/Models/classification/Step%201%20-%20TL_Model/TL_Population_Model.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/baew-seattleu/TL/blob/main/Models/classification/Step%201%20-%20TL_Model/TL_Population_Model.ipynb)     <br />     <br />
 2. Re-Training - Individual Models - Here we use existing models to learn about a specific patient at a time     <br />
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/baew-seattleu/TL/blob/main/Models/classification/Step%201%20-%20TL_Model/TL_Individual_Model.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/baew-seattleu/TL/blob/main/Models/classification/Step%201%20-%20TL_Model/TL_Individual_Model.ipynb)     <br />
+   2a. Epoch Analysis for Models to find which combination is best and consistently amongst highest values in Specificity     <br />
+   [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/baew-seattleu/TL/blob/main/Models/classification/Step%202%20-%20TL_Model_Eval_Analysis/TL_Epochs_Analysis.ipynb)     <br />     <br />
 3. Ensemble Modelling - By combining them to base models (conventional models like Decision Tree, KNearest Neighbor, Support Vector Machine, Logistic Regression and Naive Bayes) to predict Asthma in Patients.    <br />
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/baew-seattleu/TL/blob/main/Models/classification/Step%204%20-%20TL%2BBase_Model/TL_BaseModel.ipynb)
-
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/baew-seattleu/TL/blob/main/Models/classification/Step%204%20-%20TL%2BBase_Model/TL_BaseModel.ipynb) <br />
+    3a. Epoch Analysis for Ensemble Models to find which combination is best and consistently amongst highest values in Specificity     <br />
+   [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/baew-seattleu/TL/blob/main/Models/classification/Step%205%20-%20TL_Model_Eval_Analysis/TL_Epochs_Analysis.ipynb)     <br />     <br />
 ### Contributing
 
 Contributions to this project are welcome. If you encounter any issues or have suggestions for improvements, please open an issue or submit a pull request.
