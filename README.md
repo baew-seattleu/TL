@@ -1,2 +1,22 @@
-# TL
-Health Risk Prediction - TL architecture
+<br />
+<div align="center">
+ <a href="https://github.com/jay-singhvi/Research-Project">
+    <img src="img/logo.png" alt="logo" width="80" height="80">
+  </a>
+
+  <h3 align="center">Transfer Learning using Ensemble Models to Predict Health Risk in Asthma Patients</h3>
+  
+  <p align="center">
+    Seattle University: Data Science Research
+    <br />
+    <br />
+    <a href="https://github.com/baew-seattleu">Wan Bae</a>
+    <br /> 
+    <a href="https://github.com/madhuroopa">Madhuroopa Irukulla</a><br>
+    <a href="https://github.com/jay-singhvi">Jay Singhvi</a>
+  </p>
+</div>
+
+Transfer Learning has 2 parts normally - 
+1. Learning - Population Models - Here we create generalized models for all patients - [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)]([https://colab.research.google.com/github/SartajBhuvaji/SDGnE/blob/main/notebooks/SDGnE_Autoencoder_Notebook.ipynb](https://colab.research.google.com/github/baew-seattleu/TL/blob/main/Models/classification/Step%201%20-%20TL_Model/TL_Population_Model.ipynb))
+2. Transfer Learning - Individual Models - Here we use existing models to learn about a specific patient at a time [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)]([https://colab.research.google.com/github/SartajBhuvaji/SDGnE/blob/main/notebooks/SDGnE_Autoencoder_Notebook.ipynb](https://colab.research.google.com/github/baew-seattleu/TL/blob/main/Models/classification/Step%201%20-%20TL_Model/TL_Population_Model.ipynb))
