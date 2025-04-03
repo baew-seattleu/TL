@@ -1,134 +1,66 @@
-import math
-import random
 from math import *
-from random import randrange
-
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-import seaborn as sn
-import tensorflow
-from random import randrange
 from pandas.core.frame import DataFrame
+from random import randrange
 from scipy import stats
 from scipy.stats import gamma
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import recall_score, roc_auc_score
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import NearestNeighbors
-from sklearn.utils import shuffle
-
-
-def findNeighbors(instance, samples, k):
-    """
-    Find k nearest neighbors of the given instance in the samples.
-
-    Args:
-        instance (numpy.ndarray): The instance for which neighbors are to be found.
-        samples (numpy.ndarray): The array of samples.
-        k (int): The number of neighbors to find.
-
-    Returns:
-        distances (numpy.ndarray): Array of distances to the k neighbors.
-        indices (numpy.ndarray): Indices of the k neighbors in the samples.
-    """
-    # Using sklearn's NearestNeighbors for simplicity
-    neighbors = NearestNeighbors(n_neighbors=k, algorithm="auto").fit(samples)
-    distances, indices = neighbors.kneighbors(instance)
-    return distances, indices
+import math
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import random
+import seaborn as sn
 
 
 def calculateRadius(mi, MI_num, ma, MA_num, numAttr, mu=1):
-    """
-    Calculate the Emean of the sum of distances between minority and majority samples.
+    E = 0
+    for i in range(MI_num):
+        # Select an instance x in minority class
+        x = mi[i]
+        x = np.reshape(x, (-1, numAttr))
 
-    Args:
-        mi (numpy.ndarray): Minority samples.
-        MI_num (int): Number of minority samples.
-        ma (numpy.ndarray): Majority samples.
-        MA_num (int): Number of majority samples.
-        numAttr (int): Number of attributes/features.
-        mu (float): A multiplier for adjusting the calculated Emean. Default is 1.
-
-    Returns:
-        Emean (float): The Emean value.
-    """
-    # Reshape minority samples once for efficiency
-    mi = mi.reshape(MI_num, numAttr, -1)
-
-    # Find distances from minority samples to EVERY majority sample; NOTE: Disregard index output
-    dist, _ = findNeighbors(mi, ma, MA_num - 1)
-
-    # Calculate sum of distances between minority instances and ALL majority instances as Ei
-    Ei = dist.sum(axis=2).sum(axis=1).sum()
+        # Find distances from minority sample to EVERY majority sample; NOTE: Disregard index output
+        dist, _ = findNeighbors(x, ma, MA_num - 1)
+        # Calculate sum of distances between minority instance x and ALL majority instances as Ei
+        Ei = dist.sum()
+        # Accumulate and sum all Ei to get E
+        E += Ei
 
     # Calculate Emean of the sum of distances between all minority samples and majority samples
-    Emean = mu * (Ei / (MI_num * MA_num))
+    Emean = mu * (E / (MI_num * MA_num))
     return Emean
 
 
 def calculateSampleDensity(value, r, mi, ma):
-    """
-    Calculate the sample density at the given value.
-
-    Args:
-        value (numpy.ndarray): The value for which density is to be calculated.
-        r (float): The radius parameter for nearest neighbors.
-        mi (numpy.ndarray): Minority samples.
-        ma (numpy.ndarray): Majority samples.
-
-    Returns:
-        density (float): The calculated sample density.
-    """
-    # Create NearestNeighbors models for minority and majority samples
     mi_nn = NearestNeighbors(radius=r).fit(mi)
     ma_nn = NearestNeighbors(radius=r).fit(ma)
-
-    # Find neighbors within radius for minority and majority samples
     mi_rng = mi_nn.radius_neighbors(value)
     ma_rng = ma_nn.radius_neighbors(value)
-
     # Default weight ratio of MA to MI is 8:2
-    density = 0.8 * len(ma_rng[1][0]) + 0.2 * len(mi_rng[1][0])
+    density = 0.8 * len(np.asarray(ma_rng[1][0])) + 0.2 * len(np.asarray(mi_rng[1][0]))
     return density
 
 
 def calculateAverageDistance(c1, c1_num, c2, numAttr, k):
-    """
-    Calculate the average distance from instances in c1 to their k nearest neighbors in c2.
+    D = 0
+    for i in range(c1_num):
+        # Select an instance x in minority class
+        x = c1[i]
+        x = np.reshape(x, (-1, numAttr))
 
-    Args:
-        c1 (numpy.ndarray): Samples from the first class.
-        c1_num (int): Number of samples in the first class.
-        c2 (numpy.ndarray): Samples from the second class.
-        numAttr (int): Number of attributes/features.
-        k (int): The number of nearest neighbors to consider.
+        # Find distances from minority sample to k minority class neighbors; NOTE: Disregard index output
+        dist, _ = findNeighbors(x, c2, k)
+        Di = dist.sum() / k
+        D += Di
 
-    Returns:
-        D (float): The calculated average distance.
-    """
-    # Reshape first class samples once for efficiency
-    c1_reshaped = c1.reshape(c1_num, numAttr, -1)
-
-    # Find distances from instances in the first class to their k nearest neighbors in the second class; NOTE: Disregard index output
-    dist, _ = findNeighbors(c1_reshaped, c2, k)
-
-    # Calculate the average distance from instances in the first class to their k nearest neighbors
-    D = dist.sum(axis=2).sum(axis=1).sum() / (k * c1_num)
+    D = D / c1_num
     return D
 
 
 def BalanceClassesWithGammaDistribution(dataFrame, printDebug=True):
-    """
-    Balance classes in a DataFrame using the Gamma Distribution approach.
-
-    Args:
-        dataFrame (pd.DataFrame): Input DataFrame with a "class" column indicating class labels.
-        printDebug (bool): If True, print debugging information. Default is True.
-
-    Returns:
-        newDF (pd.DataFrame): A new DataFrame with balanced classes.
-    """
     # Divide data set into Majority (MA) and Minority (MI) Classes
     MA = dataFrame[dataFrame["class"] == 1]
     MI = dataFrame[dataFrame["class"] == 0]
@@ -141,48 +73,55 @@ def BalanceClassesWithGammaDistribution(dataFrame, printDebug=True):
     numToSynthesize = MA_num - MI_num
 
     # Convert minority class to NumPy array for synthesizing
-    mi = MI.values
+    mi = MI.to_numpy()
     numAttributes = mi.shape[1]
 
     # Create NumPy array for synthetic data
+    syntheticIndex = 0
     syntheticArray = np.empty((numToSynthesize, numAttributes))
 
     # Calculate k neighbors to search for
-    k = min(MI_num - 1, 5)
+    if (MI_num - 1) < 5:
+        k = MI_num - 1
+    else:
+        k = 5
 
-    if printDebug:
+    if printDebug == True:
         print("~~~~~~~~~~~ MI_num = ", MI_num, " ~~~~~~~~~~")
         print("~~~~~~~~~~~ k = ", k, " ~~~~~~~~~~")
 
-    # Default alpha and beta value
+    # default alpha and beta value
     alpha = 0.5
     beta = 0.0125
-    maxCD = beta * (alpha - 1)  # Coordinate of the max value
+    maxCD = beta * (alpha - 1)  # coordinate of the max value
 
     for i in range(numToSynthesize):
-        # Randomly choosing x in the minority class
+        # randomly choosing x in the minority class
         x = random.choice(mi)
 
-        _, ind = findNeighbors(x.reshape(1, -1), mi, k)
+        x = np.reshape(x, (-1, numAttributes))
+
+        _, ind = findNeighbors(x, mi, k)
 
         # Select one knn of sample and record it as y
         y = randrange(1, k + 1)
         x_prime = mi[ind[0, y]]
 
-        # Define vector v
+        # define vector v
         v = x_prime - x
 
-        # Generate t using the gamma distribution
+        # generate t using the gamma distribution
         t = stats.gamma.rvs(beta, alpha, random_state=None)
-        # New minority point p generated
+        # new minority point p generated
         p = x + (t - maxCD) * v
 
-        syntheticArray[i] = p
+        syntheticArray[syntheticIndex] = p
+        syntheticIndex += 1
 
-    # Convert syntheticArray into DataFrame
-    syntheticData = pd.DataFrame(syntheticArray, columns=MI.columns)
+    # convert syntheticArray into DataFrame
+    syntheticData = pd.DataFrame(syntheticArray, columns=MI.columns.values)
 
-    # Concatenate synthetic dataset with imbalanced dataset
+    # concatenate synthetic dataset with imbalanced dataset
     newDF = pd.concat([dataFrame, syntheticData], ignore_index=True)
 
     if printDebug:
@@ -197,88 +136,74 @@ def BalanceClassesWithGammaDistribution(dataFrame, printDebug=True):
     return newDF
 
 
+# Find Neighbors
+# value - sample to query
+# allValues - values to search for neighbors
+# k - number of neighbors to search for
+def findNeighbors(value, allValues, k):
+    nn = NearestNeighbors(n_neighbors=k + 1, metric="euclidean").fit(allValues)
+    # using k+1 since first nearest neighbor is itself
+    dist, indices = nn.kneighbors(value, return_distance=True)
+    return dist, indices
+
+
 def calculateControlCoefficient(value, k, mi, ma, Dn, Dp, printDebug=False):
-    """
-    Calculate the control coefficient for a given value.
-
-    Args:
-        value (numpy.ndarray): The value for which the control coefficient is to be calculated.
-        k (int): The number of nearest neighbors to consider.
-        mi (numpy.ndarray): Minority samples.
-        ma (numpy.ndarray): Majority samples.
-        Dn (float): Average distance for negative class.
-        Dp (float): Average distance for positive class.
-        printDebug (bool): If True, print debugging information. Default is False.
-
-    Returns:
-        cc (float): The calculated control coefficient.
-    """
     # Calculate average distance D1 between sample and k minority class neighbors
-    D1 = findNeighbors(value, mi, k)[0].sum() / k
+    dist, _ = findNeighbors(value, mi, k)
+    D1 = dist.sum() / k
 
     # Calculate average distance D2 between sample and k majority class neighbors
-    D2 = findNeighbors(value, ma, k)[0].sum() / k
+    dist, _ = findNeighbors(value, ma, k)
+    D2 = dist.sum() / k
 
     # Calculate the relative distance ratio u according to D1, D2, Dneg, and Dpos
+
     u = (D1 * Dn) / (D2 * Dp)
 
     # According to u, calculate control coefficient cc
     if u < 1:
         cc = random.uniform(0, 1)
-    elif 1 <= u <= 2:
+    elif (u >= 1) & (u <= 2):
         cc = 0.5 + 0.5 * random.uniform(0, 1)
-    else:  # u > 2
+    elif u > 2:
         cc = 0.8 + 0.2 * random.uniform(0, 1)
-
     if printDebug:
         print("D1 = ", D1)
         print("D2 = ", D2)
         print("u = ", u)
-
     return cc
 
 
 def split(x, n):
-    """
-    Split a number into 'n' parts.
-
-    Args:
-        x (int): The number to split.
-        n (int): The number of parts.
-
-    Returns:
-        list: A list containing the parts.
-    """
     arr = []
-
     if x < n:  # If we cannot split the number into exactly 'N' parts
         print("ERROR")
         return arr
-
-    pp, zp = divmod(x, n)
-
-    # If x % n == 0, then the minimum difference is 0, and all numbers are x/n
-    arr.extend([pp + 1] * zp)
-    arr.extend([pp] * (n - zp))
-
+    elif (
+        x % n == 0
+    ):  # If x % n == 0 then the minimum difference is 0 and all numbers are x/n
+        for i in range(n):
+            arr.append(x // n)
+    else:
+        # upto n-(x % n) the values will be x / n
+        # values after will be x / n + 1
+        zp = n - (x % n)
+        pp = x // n
+        for i in range(n):
+            if i >= zp:
+                arr.append(pp + 1)
+            else:
+                arr.append(pp)
     return arr
 
 
 def LogisticRegressionCLF(sample_set, org_set):
-    """
-    Train a logistic regression model on a sample set and evaluate on an original set.
+    from sklearn.model_selection import train_test_split
 
-    Args:
-        sample_set (pd.DataFrame): The DataFrame containing the training samples.
-        org_set (pd.DataFrame): The DataFrame containing the original samples.
-
-    Returns:
-        AUC (float): The Area Under the ROC Curve.
-    """
-    x_train = sample_set.drop("class", axis=1).values
+    x_train = sample_set.values
     y_train = sample_set["class"].values
 
-    x_test = org_set.drop("class", axis=1).values
+    x_test = org_set.values
     y_test = org_set["class"].values
 
     model = LogisticRegression()
@@ -291,17 +216,6 @@ def LogisticRegressionCLF(sample_set, org_set):
 
 
 def SMOTEBoostCC(dataFrame, numIterations=5, printDebug=True):
-    """
-    Apply SMOTEBoostCC algorithm to balance classes in a DataFrame.
-
-    Args:
-        dataFrame (pd.DataFrame): Input DataFrame with a "class" column indicating class labels.
-        numIterations (int): Number of iterations for SMOTEBoostCC. Default is 5.
-        printDebug (bool): If True, print debugging information. Default is True.
-
-    Returns:
-        newDF (pd.DataFrame): A new DataFrame with balanced classes.
-    """
     newDF = dataFrame
 
     # Divide data set into Majority (MA) and Minority (MI) Classes
@@ -316,7 +230,10 @@ def SMOTEBoostCC(dataFrame, numIterations=5, printDebug=True):
     numToSynthesize = MA_num - MI_num
 
     # Calculate k neighbors to search for
-    k = min(MI_num - 1, 5)
+    if (MI_num - 1) < 5:
+        k = MI_num - 1
+    else:
+        k = 5
 
     # Split numToSynthesize into numIterations for synthesizing
     GENERATE = split(numToSynthesize, numIterations)
@@ -333,6 +250,7 @@ def SMOTEBoostCC(dataFrame, numIterations=5, printDebug=True):
     newDF = dataFrame
 
     # Convert majority to NumPy array for synthesizing and density distribution calculations
+
     ma = MA.to_numpy()
 
     for synth_num in GENERATE:
@@ -353,13 +271,14 @@ def SMOTEBoostCC(dataFrame, numIterations=5, printDebug=True):
             print("Dpos = ", Dpos)
             print("Dneg = ", Dneg)
 
-        for _ in range(5):
+        for __ in range(5):
             # Create NumPy array for synthetic data
             syntheticArray = np.empty((0, numAttributes))
 
-            for _ in range(synth_num):
+            for i in range(synth_num):
                 # Select and instance x in minority class randomly
                 x = random.choice(mi)
+                # x = mi[np.random.choice(len(mi),replace=False)]
                 x = np.reshape(x, (-1, numAttributes))
 
                 controlCoeff = calculateControlCoefficient(x, k, mi, ma, Dneg, Dpos)
@@ -399,17 +318,6 @@ def SMOTEBoostCC(dataFrame, numIterations=5, printDebug=True):
 
 
 def GammaSMOTEBoostCC(dataFrame, numIterations=5, printDebug=False):
-    """
-    Apply GammaSMOTEBoostCC algorithm to balance classes in a DataFrame.
-
-    Args:
-        dataFrame (pd.DataFrame): Input DataFrame with a "class" column indicating class labels.
-        numIterations (int): Number of iterations for GammaSMOTEBoostCC. Default is 5.
-        printDebug (bool): If True, print debugging information. Default is False.
-
-    Returns:
-        newDF (pd.DataFrame): A new DataFrame with balanced classes.
-    """
     if printDebug:
         print("dataFrame", dataFrame)
 
@@ -457,7 +365,10 @@ def GammaSMOTEBoostCC(dataFrame, numIterations=5, printDebug=False):
     syntheticArray = np.empty((numToSynthesize, numAttributes))
 
     # Calculate k neighbors to search for
-    k = min(MI_num - 1, 5)
+    if (MI_num - 1) < 5:
+        k = MI_num - 1
+    else:
+        k = 5
 
     # Default alpha and beta value
     alpha = 0.5
@@ -499,37 +410,29 @@ def GammaSMOTEBoostCC(dataFrame, numIterations=5, printDebug=False):
     return newDF
 
 
-def generate_autoencoder(original_df, class_var, minority_var=None, printDebug=False):
-    """
-    Generate synthetic samples using an autoencoder to balance classes in a DataFrame.
+def generate_autoencoder(original_df, class_var, minority_var, printDebug=False):
+    # Divide data set into Majority (MA) and Minority (MI) Classes
 
-    Args:
-        original_df (pd.DataFrame): Input DataFrame with a "class" column indicating class labels.
-        class_var (str): Name of the class variable.
-        minority_var (int): Minority class label. If None, the minority class will be determined from the DataFrame.
-        printDebug (bool): If True, print debugging information. Default is False.
-
-    Returns:
-        shuffled_df (pd.DataFrame): A new DataFrame with balanced classes.
-    """
+    print("Before balancing count\n", original_df[class_var].value_counts())
     if not minority_var:
         minority_var = 0
 
-    # Divide data set into Majority (MA) and Minority (MI) Classes
-    majority_df = original_df[original_df[class_var] != minority_var]
-    minority_df = original_df[original_df[class_var] == minority_var]
+    majority_df = original_df[original_df["class"] != minority_var]
+    minority_df = original_df[original_df["class"] == minority_var]
 
     # Save the Minority Class for later
-    MI_saved = minority_df.drop(columns=[class_var]).copy()
+    MI_saved = minority_df.copy()
+    # minority_df = minority_df.drop(columns=['class'])
     input_shape = MI_saved.shape[1]
 
-    default_class = MI_saved[class_var].iloc[0]
-    MI_saved.drop(columns=[class_var], inplace=True)
+    default_class = MI_saved["class"].iloc[0]
+    MI_saved.drop(columns=["class"], inplace=True)
 
     MI_saved = MI_saved.astype(np.float32)
-    MI_saved = shuffle(MI_saved, random_state=42).reset_index(drop=True)
+    MI_saved = MI_saved.sample(frac=1, random_state=42).reset_index(drop=True)
 
     MI_num = MI_saved.shape[0]
+    input_shape = MI_saved.shape[1]
     numToSynthesize = MI_num * 2
 
     if numToSynthesize < 0:
@@ -547,7 +450,7 @@ def generate_autoencoder(original_df, class_var, minority_var=None, printDebug=F
 
     generated_data = pd.DataFrame()
 
-    # Balance the data
+    # balance the data
     while generated_data.shape[0] < class_count_diff:
         generated_samples = autoencoder.predict(
             MI_saved, verbose=0
@@ -560,28 +463,14 @@ def generate_autoencoder(original_df, class_var, minority_var=None, printDebug=F
     generated_data = generated_data[:class_count_diff]
 
     df_generated = pd.DataFrame(generated_data, columns=MI_saved.columns)
-    df_generated[class_var] = default_class
+    df_generated["class"] = default_class
     newDF = pd.concat([df_generated, minority_df, majority_df], ignore_index=True)
-    shuffled_df = shuffle(newDF, random_state=42)
-
-    if printDebug:
-        print("Before balancing count\n", original_df[class_var].value_counts())
-        print("After balancing count\n", shuffled_df[class_var].value_counts())
+    shuffled_df = newDF.sample(frac=1, random_state=42)
 
     return shuffled_df
 
 
 def SDDSMOTEBoostCC(dataFrame, printDebug=True):
-    """
-    Generate synthetic samples using SDDSMOTEBoostCC algorithm to balance classes in a DataFrame.
-
-    Args:
-        dataFrame (pd.DataFrame): Input DataFrame with a "class" column indicating class labels.
-        printDebug (bool): If True, print debugging information. Default is True.
-
-    Returns:
-        newDF (pd.DataFrame): A new DataFrame with balanced classes.
-    """
     # Calculate number of attributes in dataFrame
     numAttributes = dataFrame.shape[1]
 
@@ -617,7 +506,7 @@ def SDDSMOTEBoostCC(dataFrame, printDebug=True):
     # Create NumPy array for synthetic data
     syntheticIndex = 0
     syntheticArray = np.empty((numToSynthesize, numAttributes))
-
+    # ************************************************************************************
     # Calculate radius to delimit circular area for density calculations
     radius = calculateRadius(mi, MI_num, ma, MA_num, numAttributes, mu=2)
 
